@@ -1,0 +1,17 @@
+#Input Files (specify path to receptor and ligand files)
+receptor: "data/1stp_receptor.pdb"
+ligand: "data/biotin.pdb"
+
+
+#Docking box parameters
+
+autobox_ref: "data/biotin.pdb" #Molecule to center box on
+autobox_buffer: 8              #Add 8 A as buffer around ligand
+
+#Smina search paramaters
+cpu_cores: 4
+exhaustiveness: 8
+num_modes: 9
+
+#Output
+output_name: "results/docked_biotin_streptavidin.pdbqt"
