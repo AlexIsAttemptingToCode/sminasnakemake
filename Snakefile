@@ -11,7 +11,8 @@ configfile: "config.yaml"
 
 rule all:
     input:
-        config["output_name"]
+        config["output_name"],
+        config["smina_plot"]
 
 
 #3. Prep receptor
@@ -55,8 +56,12 @@ rule run_smina:
         exhaust = config["exhaustiveness"],
         modes = config["num_modes"],
         cpu = config["cpu_cores"]
+        #Manualbox parameters, remove comments to enable and comment out autobox_ref_file and autobox_add
+        #Must also modify config file
+        #cx = config["center"]["x"], cy = config["center"]["y"], cz = config["center"]["z"],
+        #sx = config["size"]["x"], sy = config["size"]["y"], sz = config["size"]["z"],
     log:
-        #Log in case of problems
+        #Log results
         "results/smina.log"
     shell:
         """
@@ -69,4 +74,45 @@ rule run_smina:
               --cpu {params.cpu} \
               --out {output.docked} \
               --log {log}
+        """
+
+#6. Clean smina.log to csv
+rule clean_log:
+    input:
+        log = "results/smina.log"
+    output:
+        csv = config["clean_csv"]
+    shell:
+        """
+        echo "Mode,Affinity,RMSD_lb,RMSD_ub" > {output.csv}
+        awk '$2 ~ /^-?[0-9]/ {{ print $1","$2","$3","$4 }}' {input.log} >> {output.csv}
+        """
+
+
+#7. Plot RMSD vs Affinity from cleaned smina.log
+rule plot_results:
+    input:
+        csv = config["clean_csv"]
+    output:
+        plot = config["smina_plot"]
+    shell:
+        "python {workflow.basedir}/scripts/AffinityvsRMSD.py {input.csv} {output.plot}"
+
+
+#8. Visualization (Optional activation using visualize, run without first followed by this by simply adding "visualize")
+rule visualize:
+    input:
+        plot = config["smina_plot"],
+        log = config["smina_log"],
+        docked = config["output_name"],
+        lig_qt = "results/ligand.pdbqt",
+        rec_qt = "results/receptor.pdbqt"
+    shell:
+        """
+        # Open the Plot and Log
+        open {input.plot}
+        open {input.log}
+        
+        # Launch PyMOL with the 3 structures loaded
+        pymol {input.docked} {input.lig_qt} {input.rec_qt} &
         """

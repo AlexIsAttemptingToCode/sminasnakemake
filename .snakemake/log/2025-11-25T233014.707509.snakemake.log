@@ -1,0 +1,6 @@
+Building DAG of jobs...
+MissingInputException in rule receptor_prep in file "/Users/alex/Documents/FHNW/Software_Architecture/SnakeMakeProj/SminaSnakeMake/Snakefile", line 20:
+Missing input files for rule receptor_prep:
+    output: results/receptor.pdbqt
+    affected files:
+        data/1stp_receptor.pdb
